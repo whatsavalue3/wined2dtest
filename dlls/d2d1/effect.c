@@ -1044,7 +1044,18 @@ L"<?xml version='1.0'?>                                                   \
     <Inputs >                                                             \
       <Input name='Source'/>                                              \
     </Inputs>                                                             \
-    <Property name='Rect' type='vector4' />                               \
+    <Property name='Rect' type='vector4'> \
+        <Property name='DisplayName' type='string' value='Rect'/>\
+        <Property name='Default' type='vector4' value='(-inf, -inf, inf, inf)'/>\
+    </Property>\
+    <Property name='BorderMode' type='enum'>\
+        <Property name='DisplayName' type='string' value='Border Mode'/>\
+        <Property name='Default' type='enum' value='0'/>\
+        <Fields>\
+            <Field name='Soft' displayname='Soft' index='0'/>\
+            <Field name='Hard' displayname='Hard' index='1'/>\
+        </Fields>\
+    </Property>\
   </Effect>";
 
 static const WCHAR shadow_description[] =
@@ -1071,21 +1082,171 @@ L"<?xml version='1.0'?>                                                   \
     </Inputs>                                                             \
   </Effect>";
 
+static const WCHAR gaussian_blur_description[] =
+L"<?xml version='1.0'?>                                                   \
+  <Effect>                                                                \
+    <Property name='DisplayName' type='string' value='Gaussian Blur'/>    \
+    <Property name='Author'      type='string' value='The Wine Project'/> \
+    <Property name='Category'    type='string' value='Stub'/>             \
+    <Property name='Description' type='string' value='Gaussian Blur'/>    \
+    <Inputs >                                                             \
+      <Input name='Source'/>                                              \
+    </Inputs>                                                             \
+   <Property name='StandardDeviation' type='float'>                                 \
+    <Property name='DisplayName' type='string' value='Standard Deviation'/> \
+    <Property name='Min' type='float' value='0.0'/> \
+    <Property name='Max' type='float' value='250.0'/> \
+    <Property name='Default' type='float' value='3.0'/> \
+  </Property> \
+  <Property name='Optimization' type='enum'>                                \
+    <Property name='DisplayName' type='string' value='Optimization'/>      \
+    <Property name='Default' type='enum' value='1'/>                     \
+    <Fields>                                                         \
+      <Field name='Speed' displayname='Speed' index='0'/>                \
+      <Field name='Balanced' displayname='Balanced' index='1'/>           \
+      <Field name='Quality' displayname='Quality' index='2'/>             \
+    </Fields>                                                        \
+  </Property>                                                        \
+  <Property name='BorderMode' type='enum'>\
+      <Property name='DisplayName' type='string' value='Border Mode'/>\
+      <Property name='Default' type='enum' value='0'/>\
+      <Fields>\
+          <Field name='Soft' displayname='Soft' index='0'/>\
+          <Field name='Hard' displayname='Hard' index='1'/>\
+      </Fields>\
+  </Property>\
+                               \
+  </Effect>";
+
+static const WCHAR scale_description[] =
+L"<?xml version='1.0'?>                                                   \
+  <Effect>                                                                \
+    <Property name='DisplayName' type='string' value='Grayscale'/>        \
+    <Property name='Author'      type='string' value='The Wine Project'/> \
+    <Property name='Category'    type='string' value='Stub'/>             \
+    <Property name='Description' type='string' value='Grayscale'/>        \
+    <Inputs >                                                             \
+      <Input name='Source'/>                                              \
+    </Inputs>                                                             \
+	<Property name='Scale' type='vector2'> \
+        <Property name='DisplayName' type='string' value='Scale'/> \
+        <Property name='Min' type='vector2' value='(0.01, 0.01)'/> \
+        <Property name='Default' type='vector2' value='(1, 1)'/> \
+    </Property> \
+    <Property name='CenterPoint' type='vector2'> \
+        <Property name='DisplayName' type='string' value='Center Point'/> \
+        <Property name='Default' type='vector2' value='(0, 0)'/> \
+    </Property> \
+    <Property name='InterpolationMode' type='enum'> \
+        <Property name='DisplayName' type='string' value='Interpolation Mode'/> \
+        <Property name='Default' type='enum' value='1'/> \
+        <Fields> \
+          <Field name='NearestNeighbor' displayname='Nearest Neighbor' index='0'/> \
+          <Field name='Linear' displayname='Linear' index='1'/> \
+          <Field name='Cubic' displayname='Cubic' index='2'/> \
+          <Field name='MultiSampleLinear' displayname='Multi-Sample Linear' index='3'/> \
+          <Field name='Anisotropic' displayname='Anisotropic' index='4'/> \
+          <Field name='HighQualityCubic' displayname='High Quality Cubic' index='5'/> \
+        </Fields> \
+    </Property> \
+    <Property name='BorderMode' type='enum'> \
+        <Property name='DisplayName' type='string' value='Border Mode'/> \
+        <Property name='Default' type='enum' value='0'/> \
+        <Fields> \
+            <Field name='Soft' displayname='Soft' index='0'/> \
+            <Field name='Hard' displayname='Hard' index='1'/> \
+        </Fields> \
+    </Property> \
+    <Property name='Sharpness' type='float'> \
+        <Property name='DisplayName' type='string' value='Sharpness'/> \
+        <Property name='Min' type='float' value='0'/> \
+        <Property name='Max' type='float' value='1'/> \
+        <Property name='Default' type='float' value='0'/> \
+    </Property> \
+  </Effect>";
+
+static const WCHAR crossfade_description[] =
+L"<?xml version='1.0'?>                                                   \
+  <Effect>                                                                \
+    <Property name='DisplayName' type='string' value='Grayscale'/>        \
+    <Property name='Author'      type='string' value='The Wine Project'/> \
+    <Property name='Category'    type='string' value='Stub'/>             \
+    <Property name='Description' type='string' value='Grayscale'/>        \
+	<Inputs> \
+        <Input name='Destination'/> \
+        <Input name='Source'/> \
+    </Inputs> \
+ \
+    <Property name='Weight' type='float'> \
+        <Property name='DisplayName' type='string' value='Weight'/> \
+        <Property name='Min' type='float' value='0.0'/> \
+        <Property name='Max' type='float' value='1.0'/> \
+        <Property name='Default' type='float' value='0.5'/> \
+    </Property>\
+  </Effect>";
+
+
+HRESULT gaussian_blur_set_value(IUnknown *effect,const BYTE *data,UINT32 data_size)
+{
+	return S_OK;
+}
+
+const D2D1_PROPERTY_BINDING gaussian_blur_bindings[] =
+{
+	{L"Optimization",&gaussian_blur_set_value,0},
+	{L"StandardDeviation",&gaussian_blur_set_value,0},
+	{L"BorderMode",&gaussian_blur_set_value,0},
+};
+
+const D2D1_PROPERTY_BINDING scale_bindings[] =
+{
+	{L"Scale",&gaussian_blur_set_value,0},
+	{L"CenterPoint",&gaussian_blur_set_value,0},
+	{L"InterpolationMode",&gaussian_blur_set_value,0},
+	{L"BorderMode",&gaussian_blur_set_value,0},
+	{L"Sharpness",&gaussian_blur_set_value,0},
+};
+
+const D2D1_PROPERTY_BINDING crossfade_bindings[] =
+{
+	{L"Weight",&gaussian_blur_set_value,0},
+};
+
+const D2D1_PROPERTY_BINDING crop_bindings[] =
+{
+	{L"Rect",&gaussian_blur_set_value,0},
+	{L"BorderMode",&gaussian_blur_set_value,0},
+};
+
 void d2d_effects_init_builtins(struct d2d_factory *factory)
 {
     static const struct builtin_description
     {
         const CLSID *clsid;
         const WCHAR *description;
+		const D2D1_PROPERTY_BINDING* property_bindings;
+		const UINT32 property_bindings_count;
     }
     builtin_effects[] =
     {
-        { &CLSID_D2D12DAffineTransform, _2d_affine_transform_description },
-        { &CLSID_D2D13DPerspectiveTransform, _3d_perspective_transform_description},
-        { &CLSID_D2D1Composite, composite_description },
-        { &CLSID_D2D1Crop, crop_description },
-        { &CLSID_D2D1Shadow, shadow_description },
-        { &CLSID_D2D1Grayscale, grayscale_description },
+        { &CLSID_D2D12DAffineTransform, _2d_affine_transform_description, NULL,0 },
+        { &CLSID_D2D13DPerspectiveTransform, _3d_perspective_transform_description, NULL,0 },
+        { &CLSID_D2D1Composite, composite_description, NULL,0  },
+        { &CLSID_D2D1Crop, crop_description, &crop_bindings,ARRAY_SIZE(crop_bindings)  },
+        { &CLSID_D2D1Shadow, shadow_description, NULL,0  },
+        { &CLSID_D2D1Grayscale, grayscale_description, NULL,0  },
+        { &CLSID_D2D1Contrast, composite_description, NULL,0  },
+        { &CLSID_D2D1Histogram, composite_description, NULL,0  },
+        { &CLSID_D2D1Emboss, composite_description, NULL,0  },
+        { &CLSID_D2D1Opacity, composite_description, NULL,0  },
+        { &CLSID_D2D1AlphaMask, composite_description, NULL,0  },
+        { &CLSID_D2D1ConvolveMatrix, composite_description, NULL,0  },
+        { &CLSID_D2D1OpacityMetadata, composite_description, NULL,0  },
+        { &CLSID_D2D1BitmapSource, composite_description, NULL,0  },
+        { &CLSID_D2D1Invert, composite_description, NULL,0  },
+        { &CLSID_D2D1GaussianBlur, gaussian_blur_description, &gaussian_blur_bindings,ARRAY_SIZE(gaussian_blur_bindings)  },
+        { &CLSID_D2D1Scale, scale_description, &scale_bindings,ARRAY_SIZE(scale_bindings)  },
+        { &CLSID_D2D1CrossFade, crossfade_description, &crossfade_bindings,ARRAY_SIZE(crossfade_bindings)  },
     };
     unsigned int i;
     HRESULT hr;
@@ -1093,7 +1254,7 @@ void d2d_effects_init_builtins(struct d2d_factory *factory)
     for (i = 0; i < ARRAY_SIZE(builtin_effects); ++i)
     {
         if (FAILED(hr = d2d_factory_register_builtin_effect(factory, builtin_effects[i].clsid, builtin_effects[i].description,
-                NULL, 0, builtin_factory_stub)))
+                builtin_effects[i].property_bindings, builtin_effects[i].property_bindings_count, builtin_factory_stub)))
         {
             WARN("Failed to register the effect %s, hr %#lx.\n", wine_dbgstr_guid(builtin_effects[i].clsid), hr);
         }
@@ -1157,7 +1318,7 @@ static HRESULT d2d_effect_properties_internal_add(struct d2d_effect_properties *
         [D2D1_PROPERTY_TYPE_VECTOR2]       = sizeof(D2D_VECTOR_2F),
         [D2D1_PROPERTY_TYPE_VECTOR3]       = sizeof(D2D_VECTOR_3F),
         [D2D1_PROPERTY_TYPE_VECTOR4]       = sizeof(D2D_VECTOR_4F),
-        [D2D1_PROPERTY_TYPE_BLOB]          = 0 /* FIXME */,
+        [D2D1_PROPERTY_TYPE_BLOB]          = 512 /* FIXME */,
         [D2D1_PROPERTY_TYPE_IUNKNOWN]      = sizeof(IUnknown *),
         [D2D1_PROPERTY_TYPE_ENUM]          = sizeof(UINT32),
         [D2D1_PROPERTY_TYPE_ARRAY]         = sizeof(UINT32),
@@ -1173,11 +1334,11 @@ static HRESULT d2d_effect_properties_internal_add(struct d2d_effect_properties *
 
     assert(type >= D2D1_PROPERTY_TYPE_STRING && type <= D2D1_PROPERTY_TYPE_COLOR_CONTEXT);
 
-    if (type == D2D1_PROPERTY_TYPE_BLOB)
-    {
-        FIXME("Ignoring property %s of type %u.\n", wine_dbgstr_w(name), type);
-        return S_OK;
-    }
+    //if (type == D2D1_PROPERTY_TYPE_BLOB)
+    //{
+    //    FIXME("Ignoring property %s of type %u.\n", wine_dbgstr_w(name), type);
+    //    return S_OK;
+    //}
 
     if (!d2d_array_reserve((void **)&props->properties, &props->size, props->count + 1,
             sizeof(*props->properties)))
@@ -1339,6 +1500,7 @@ static struct d2d_effect_property * d2d_effect_properties_get_property_by_index(
         if (properties->properties[i].index == index)
             return &properties->properties[i];
     }
+	printf("couldnt find index: %x\n",index);
 
     return NULL;
 }
@@ -1440,6 +1602,7 @@ static HRESULT d2d_effect_property_set_value(struct d2d_effect_properties *prope
         case D2D1_PROPERTY_TYPE_BOOL:
         case D2D1_PROPERTY_TYPE_UINT32:
         case D2D1_PROPERTY_TYPE_ENUM:
+        case D2D1_PROPERTY_TYPE_FLOAT:
             memcpy(properties->data.ptr + prop->data.offset, value, size);
             break;
         default:
@@ -1834,7 +1997,10 @@ static const ID2D1EffectContextVtbl d2d_effect_context_vtbl =
 
 void d2d_effect_context_init(struct d2d_effect_context *effect_context, struct d2d_device_context *device_context)
 {
+	printf("d2d_effect_context_init %llx\n",effect_context);
     effect_context->ID2D1EffectContext_iface.lpVtbl = &d2d_effect_context_vtbl;
+	printf("effect_context->ID2D1EffectContext_iface.lpVtbl %llx\n",effect_context->ID2D1EffectContext_iface.lpVtbl);
+
     effect_context->refcount = 1;
     effect_context->device_context = device_context;
     ID2D1DeviceContext6_AddRef(&device_context->ID2D1DeviceContext6_iface);
@@ -1848,14 +2014,19 @@ static inline struct d2d_effect *impl_from_ID2D1Effect(ID2D1Effect *iface)
 static void d2d_effect_cleanup(struct d2d_effect *effect)
 {
     unsigned int i;
-
+	
+	
     for (i = 0; i < effect->input_count; ++i)
     {
         if (effect->inputs[i])
             ID2D1Image_Release(effect->inputs[i]);
     }
-    free(effect->inputs);
-    ID2D1EffectContext_Release(&effect->effect_context->ID2D1EffectContext_iface);
+	free(effect->inputs);
+	//__asm (
+	//	"INT3"
+	//);
+	if(effect->effect_context)
+		d2d_effect_context_Release(&effect->effect_context->ID2D1EffectContext_iface);
     if (effect->graph)
         ID2D1TransformGraph_Release(&effect->graph->ID2D1TransformGraph_iface);
     //d2d_effect_properties_cleanup(&effect->properties);
@@ -2038,7 +2209,7 @@ static void STDMETHODCALLTYPE d2d_effect_SetInput(ID2D1Effect *iface, UINT32 ind
 {
     struct d2d_effect *effect = impl_from_ID2D1Effect(iface);
 
-    TRACE("iface %p, index %u, input %p, invalidate %#x.\n", iface, index, input, invalidate);
+    printf("iface %p, index %u, input %p, invalidate %#x.\n", iface, index, input, invalidate);
 
     if (index >= effect->input_count)
         return;
@@ -2138,7 +2309,8 @@ static void STDMETHODCALLTYPE d2d_effect_GetOutput(ID2D1Effect *iface, ID2D1Imag
     struct d2d_effect *effect = impl_from_ID2D1Effect(iface);
 
     TRACE("iface %p, output %p.\n", iface, output);
-
+	
+	
     ID2D1Image_AddRef(*output = &effect->ID2D1Image_iface);
 }
 
@@ -2664,7 +2836,7 @@ HRESULT d2d_effect_create(struct d2d_device_context *context, const CLSID *effec
 
     if (!(reg = d2d_factory_get_registered_effect(context->factory, effect_id)))
     {
-        WARN("Effect id %s not found.\n", wine_dbgstr_guid(effect_id));
+        printf("Effect id %s not found.\n", wine_dbgstr_guid(effect_id));
         return D2DERR_EFFECT_IS_NOT_REGISTERED;
     }
 

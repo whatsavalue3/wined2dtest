@@ -273,6 +273,205 @@ static void STDMETHODCALLTYPE d2d_command_list_GetFactory(ID2D1CommandList *ifac
     ID2D1Factory_AddRef(*factory = command_list->factory);
 }
 
+
+HRESULT STDMETHODCALLTYPE d2d_command_list_device_draw(ID2D1CommandList *iface, ID2D1DeviceContext6 *device,
+        const D2D1_POINT_2F *target_offset, const D2D1_RECT_F *image_rect, D2D1_INTERPOLATION_MODE interpolation_mode,
+        D2D1_COMPOSITE_MODE composite_mode)
+{
+	struct d2d_command_list *command_list = impl_from_ID2D1CommandList(iface);
+    const void *data, *end;
+    HRESULT hr;
+
+    TRACE("iface %p, device %p.\n", iface, device);
+
+    if (command_list->state != D2D_COMMAND_LIST_STATE_CLOSED) return S_OK;
+
+    data = command_list->data;
+    end = (char *)command_list->data + command_list->size;
+    while (data < end)
+    {
+        const struct d2d_command *command = data;
+		printf("command->op: %i\n",command->op);
+        switch (command->op)
+        {
+            case D2D_COMMAND_SET_ANTIALIAS_MODE:
+            {
+                const struct d2d_command_set_antialias_mode *c = data;
+                ID2D1DeviceContext6_SetAntialiasMode(device, c->mode);
+                break;
+            }
+            case D2D_COMMAND_SET_TAGS:
+            {
+                const struct d2d_command_set_tags *c = data;
+                ID2D1DeviceContext6_SetTags(device, c->tag1, c->tag2);
+                break;
+            }
+            case D2D_COMMAND_SET_TEXT_ANTIALIAS_MODE:
+            {
+                const struct d2d_command_set_text_antialias_mode *c = data;
+                ID2D1DeviceContext6_SetTextAntialiasMode(device, c->mode);
+                break;
+            }
+            case D2D_COMMAND_SET_TEXT_RENDERING_PARAMS:
+            {
+                const struct d2d_command_set_text_rendering_params *c = data;
+                ID2D1DeviceContext6_SetTextRenderingParams(device, c->params);
+                break;
+            }
+            case D2D_COMMAND_SET_TRANSFORM:
+            {
+                const struct d2d_command_set_transform *c = data;
+                ID2D1DeviceContext6_SetTransform(device, &c->transform);
+                break;
+            }
+			/*
+            case D2D_COMMAND_SET_PRIMITIVE_BLEND:
+            {
+                const struct d2d_command_set_primitive_blend *c = data;
+                ID2D1DeviceContext61 *device1;
+                ID2D1DeviceContext64 *device4;
+
+                switch (c->primitive_blend)
+                {
+                    case D2D1_PRIMITIVE_BLEND_SOURCE_OVER:
+                    case D2D1_PRIMITIVE_BLEND_COPY:
+                        ID2D1DeviceContext6_SetPrimitiveBlend(device, c->primitive_blend);
+                        break;
+                    case D2D1_PRIMITIVE_BLEND_MIN:
+                    case D2D1_PRIMITIVE_BLEND_ADD:
+                        if (SUCCEEDED(ID2D1DeviceContext6_QueryInterface(device, &IID_ID2D1DeviceContext61, (void **)&device1)))
+                        {
+                            ID2D1DeviceContext61_SetPrimitiveBlend1(device1, c->primitive_blend);
+                            ID2D1DeviceContext61_Release(device1);
+                        }
+                        else
+                            ID2D1DeviceContext6_SetPrimitiveBlend(device, D2D1_PRIMITIVE_BLEND_SOURCE_OVER);
+                        break;
+                    case D2D1_PRIMITIVE_BLEND_MAX:
+                        if (SUCCEEDED(ID2D1DeviceContext6_QueryInterface(device, &IID_ID2D1DeviceContext64, (void **)&device4)))
+                        {
+                            ID2D1DeviceContext64_SetPrimitiveBlend2(device4, c->primitive_blend);
+                            ID2D1DeviceContext64_Release(device4);
+                        }
+                        else
+                            ID2D1DeviceContext6_SetPrimitiveBlend(device, D2D1_PRIMITIVE_BLEND_SOURCE_OVER);
+                        break;
+                    default:
+                        FIXME("Unexpected blend mode %u.\n", c->primitive_blend);
+                        E_UNEXPECTED;
+                }
+                break;
+            }
+			*/
+            case D2D_COMMAND_SET_UNIT_MODE:
+            {
+                const struct d2d_command_set_unit_mode *c = data;
+                ID2D1DeviceContext6_SetUnitMode(device, c->mode);
+                break;
+            }
+            case D2D_COMMAND_CLEAR:
+            {
+                const struct d2d_command_clear *c = data;
+                ID2D1DeviceContext6_Clear(device, &c->color);
+                break;
+            }
+            case D2D_COMMAND_DRAW_GLYPH_RUN:
+            {
+                const struct d2d_command_draw_glyph_run *c = data;
+                ID2D1DeviceContext6_DrawGlyphRun(device, c->origin, &c->run, c->run_desc, c->brush, c->measuring_mode);
+                break;
+            }
+            case D2D_COMMAND_DRAW_LINE:
+            {
+                const struct d2d_command_draw_line *c = data;
+                ID2D1DeviceContext6_DrawLine(device, c->p0, c->p1, c->brush, c->stroke_width,
+                        c->stroke_style);
+                break;
+            }
+            case D2D_COMMAND_DRAW_GEOMETRY:
+            {
+                const struct d2d_command_draw_geometry *c = data;
+                ID2D1DeviceContext6_DrawGeometry(device, c->geometry, c->brush, c->stroke_width,
+                        c->stroke_style);
+                break;
+            }
+            case D2D_COMMAND_DRAW_RECTANGLE:
+            {
+                const struct d2d_command_draw_rectangle *c = data;
+                ID2D1DeviceContext6_DrawRectangle(device, &c->rect, c->brush, c->stroke_width,
+                        c->stroke_style);
+                break;
+            }
+            case D2D_COMMAND_DRAW_BITMAP:
+            {
+                const struct d2d_command_draw_bitmap *c = data;
+				ID2D1DeviceContext6_DrawImage(device, c->bitmap, target_offset, image_rect, interpolation_mode, composite_mode);
+                //ID2D1DeviceContext6_DrawBitmap(device, c->bitmap, c->dst_rect, c->opacity,
+                //        c->interpolation_mode, c->src_rect, c->perspective_transform);
+                break;
+            }
+            case D2D_COMMAND_DRAW_IMAGE:
+            {
+                const struct d2d_command_draw_image *c = data;
+                ID2D1DeviceContext6_DrawImage(device, c->image, c->target_offset, c->image_rect,
+                        c->interpolation_mode, c->composite_mode);
+                break;
+            }
+            case D2D_COMMAND_FILL_MESH:
+            {
+                const struct d2d_command_fill_mesh *c = data;
+                ID2D1DeviceContext6_FillMesh(device, c->mesh, c->brush);
+                break;
+            }
+            case D2D_COMMAND_FILL_OPACITY_MASK:
+            {
+                const struct d2d_command_fill_opacity_mask *c = data;
+                ID2D1DeviceContext6_FillOpacityMask(device, c->bitmap, c->brush, c->dst_rect, c->src_rect);
+                break;
+            }
+            case D2D_COMMAND_FILL_GEOMETRY:
+            {
+                const struct d2d_command_fill_geometry *c = data;
+                ID2D1DeviceContext6_FillGeometry(device, c->geometry, c->brush, c->opacity_brush);
+                break;
+            }
+            case D2D_COMMAND_FILL_RECTANGLE:
+            {
+                const struct d2d_command_fill_rectangle *c = data;
+                ID2D1DeviceContext6_FillRectangle(device, &c->rect, c->brush);
+                break;
+            }
+            case D2D_COMMAND_PUSH_CLIP:
+            {
+                const struct d2d_command_push_clip *c = data;
+                ID2D1DeviceContext6_PushAxisAlignedClip(device, &c->rect, c->mode);
+                break;
+            }
+            case D2D_COMMAND_PUSH_LAYER:
+            {
+                const struct d2d_command_push_layer *c = data;
+                ID2D1DeviceContext6_PushLayer(device, &c->params, c->layer);
+                break;
+            }
+            case D2D_COMMAND_POP_CLIP:
+                ID2D1DeviceContext6_PopAxisAlignedClip(device);
+                break;
+            case D2D_COMMAND_POP_LAYER:
+                ID2D1DeviceContext6_PopLayer(device);
+                break;
+            default:
+                FIXME("Unhandled command %u.\n", command->op);
+                hr = E_UNEXPECTED;
+        }
+
+        if (FAILED(hr)) return hr;
+
+        data = (char *)data + command->size;
+    }
+
+    return S_OK;
+}
+
 static HRESULT STDMETHODCALLTYPE d2d_command_list_Stream(ID2D1CommandList *iface, ID2D1CommandSink *sink)
 {
     struct d2d_command_list *command_list = impl_from_ID2D1CommandList(iface);
@@ -474,8 +673,8 @@ static HRESULT STDMETHODCALLTYPE d2d_command_list_Close(ID2D1CommandList *iface)
     struct d2d_command_list *command_list = impl_from_ID2D1CommandList(iface);
 
     FIXME("iface %p stub.\n", iface);
-
-    if (command_list->state != D2D_COMMAND_LIST_STATE_OPEN)
+	printf("State: %x\n",command_list->state);
+    if (command_list->state != D2D_COMMAND_LIST_STATE_OPEN && command_list->state != D2D_COMMAND_LIST_STATE_INITIAL)
         return D2DERR_WRONG_STATE;
 
     command_list->state = D2D_COMMAND_LIST_STATE_CLOSED;
@@ -601,7 +800,7 @@ static HRESULT d2d_command_list_create_brush(struct d2d_command_list *command_li
                     &image_properties, &properties, (ID2D1ImageBrush **)ret);
             break;
         default:
-            FIXME("Unsupported brush type %u.\n", brush->type);
+            printf("Unsupported brush type %u.\n", brush->type);
             return E_UNEXPECTED;
     }
 

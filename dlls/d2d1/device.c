@@ -228,6 +228,7 @@ static HRESULT STDMETHODCALLTYPE d2d_device_context_inner_QueryInterface(IUnknow
             || IsEqualGUID(iid, &IID_ID2D1DeviceContext1)
             || IsEqualGUID(iid, &IID_ID2D1DeviceContext)
             || IsEqualGUID(iid, &IID_ID2D1RenderTarget)
+            || IsEqualGUID(iid, &IID_ID2D1GradientStopCollection)
             || IsEqualGUID(iid, &IID_ID2D1Resource)
             || IsEqualGUID(iid, &IID_IUnknown))
     {
@@ -1748,7 +1749,8 @@ static HRESULT STDMETHODCALLTYPE d2d_device_context_Flush(ID2D1DeviceContext6 *i
     if (context->ops && context->ops->device_context_present)
         context->ops->device_context_present(context->outer_unknown);
 
-    return E_NOTIMPL;
+    //return E_NOTIMPL;
+	return S_OK;
 }
 
 static void STDMETHODCALLTYPE d2d_device_context_SaveDrawingState(ID2D1DeviceContext6 *iface,
@@ -2203,7 +2205,15 @@ static HRESULT STDMETHODCALLTYPE d2d_device_context_ID2D1DeviceContext_CreateGra
             iface, stops, stop_count, preinterpolation_space, postinterpolation_space,
             buffer_precision, extend_mode, color_interpolation_mode, gradient);
 
-    return E_NOTIMPL;
+    struct d2d_device_context *render_target = impl_from_ID2D1DeviceContext(iface);
+    struct d2d_gradient *object;
+    HRESULT hr;
+
+    if (SUCCEEDED(hr = d2d_gradient_create(render_target->factory, render_target->d3d_device,
+            stops, stop_count, D2D1_GAMMA_1_0, extend_mode, &object)))
+        *gradient = &object->ID2D1GradientStopCollection_iface;
+
+    return hr;
 }
 
 static HRESULT STDMETHODCALLTYPE d2d_device_context_CreateImageBrush(ID2D1DeviceContext6 *iface,
@@ -2302,11 +2312,12 @@ static HRESULT STDMETHODCALLTYPE d2d_device_context_GetImageLocalBounds(ID2D1Dev
     D2D_SIZE_F size;
 
     TRACE("iface %p, image %p, local_bounds %p.\n", iface, image, local_bounds);
-
+	
+	local_bounds->left = 0.0f;
+    local_bounds->top  = 0.0f;
+	
     if (SUCCEEDED(ID2D1Image_QueryInterface(image, &IID_ID2D1Bitmap, (void **)&bitmap)))
     {
-        local_bounds->left = 0.0f;
-        local_bounds->top  = 0.0f;
         switch (context->drawing_state.unitMode)
         {
             case D2D1_UNIT_MODE_DIPS:
@@ -2331,9 +2342,10 @@ static HRESULT STDMETHODCALLTYPE d2d_device_context_GetImageLocalBounds(ID2D1Dev
     }
     else
     {
-        FIXME("Unable to get local bounds of image %p.\n", image);
-
-        return E_NOTIMPL;
+        printf("Unable to get local bounds of image %p.\n", image);
+		local_bounds->right  = 16.0f;
+        local_bounds->bottom = 16.0f;
+        return S_OK;
     }
 }
 
@@ -2539,12 +2551,15 @@ static void STDMETHODCALLTYPE d2d_device_context_ID2D1DeviceContext_DrawGlyphRun
     d2d_device_context_draw_glyph_run(context, baseline_origin, glyph_run, glyph_run_desc, brush, measuring_mode);
 }
 
-static void STDMETHODCALLTYPE d2d_device_context_DrawImage(ID2D1DeviceContext6 *iface, ID2D1Image *image,
+static void STDMETHODCALLTYPE d2d_device_context_DrawImage(ID2D1DeviceContext6 *iface, ID2D1Image *image_orig,
         const D2D1_POINT_2F *target_offset, const D2D1_RECT_F *image_rect, D2D1_INTERPOLATION_MODE interpolation_mode,
         D2D1_COMPOSITE_MODE composite_mode)
 {
     struct d2d_device_context *context = impl_from_ID2D1DeviceContext(iface);
+	ID2D1Image *image = image_orig;
     ID2D1Bitmap *bitmap;
+    ID2D1CommandList *command_list;
+    ID2D1Effect *effect;
 
     TRACE("iface %p, image %p, target_offset %s, image_rect %s, interpolation_mode %#x, composite_mode %#x.\n",
             iface, image, debug_d2d_point_2f(target_offset), debug_d2d_rect_f(image_rect),
@@ -2558,7 +2573,21 @@ static void STDMETHODCALLTYPE d2d_device_context_DrawImage(ID2D1DeviceContext6 *
     }
 
     if (composite_mode != D2D1_COMPOSITE_MODE_SOURCE_OVER)
-        FIXME("Unhandled composite mode %#x.\n", composite_mode);
+        printf("Unhandled composite mode %#x.\n", composite_mode);
+
+	while (SUCCEEDED(ID2D1Image_QueryInterface(image, &IID_ID2D1Effect, (void **)&effect)))
+	{
+		ID2D1Effect_GetInput(effect,0,&image);
+		printf("Quering %llx -> %llx\n",effect,image);
+	}
+	
+	if(SUCCEEDED(ID2D1Image_QueryInterface(image, &IID_ID2D1CommandList, (void**)&command_list)))
+	{
+		d2d_command_list_device_draw(command_list, iface, target_offset, image_rect,
+                interpolation_mode, composite_mode);
+		ID2D1CommandList_Release(command_list);
+		return;
+	}
 
     if (SUCCEEDED(ID2D1Image_QueryInterface(image, &IID_ID2D1Bitmap, (void **)&bitmap)))
     {
@@ -2567,8 +2596,10 @@ static void STDMETHODCALLTYPE d2d_device_context_DrawImage(ID2D1DeviceContext6 *
         ID2D1Bitmap_Release(bitmap);
         return;
     }
-
-    FIXME("Unhandled image %p.\n", image);
+	
+	
+	
+    printf("Unhandled image %p.\n", image);
 }
 
 static void STDMETHODCALLTYPE d2d_device_context_DrawGdiMetafile(ID2D1DeviceContext6 *iface,
@@ -4259,6 +4290,7 @@ static HRESULT WINAPI d2d_device_QueryInterface(ID2D1Device6 *iface, REFIID iid,
             || IsEqualGUID(iid, &IID_ID2D1Device2)
             || IsEqualGUID(iid, &IID_ID2D1Device1)
             || IsEqualGUID(iid, &IID_ID2D1Device)
+            || IsEqualGUID(iid, &IID_ID2D1GradientStopCollection)
             || IsEqualGUID(iid, &IID_ID2D1Resource)
             || IsEqualGUID(iid, &IID_IUnknown))
     {

@@ -342,7 +342,7 @@ static HRESULT STDMETHODCALLTYPE d2d_factory_CreateStrokeStyle(ID2D1Factory7 *if
 
     if (FAILED(hr = d2d_stroke_style_init(object, (ID2D1Factory *)iface, &desc1, dashes, dash_count)))
     {
-        WARN("Failed to initialise stroke style, hr %#lx.\n", hr);
+        printf("Failed to initialise stroke style, hr %#lx.\n", hr);
         free(object);
         return hr;
     }
@@ -558,7 +558,7 @@ static HRESULT STDMETHODCALLTYPE d2d_factory_CreateStrokeStyle1(ID2D1Factory7 *i
     if (FAILED(hr = d2d_stroke_style_init(object, (ID2D1Factory *)iface,
             desc, dashes, dash_count)))
     {
-        WARN("Failed to initialise stroke style, hr %#lx.\n", hr);
+        printf("Failed to initialise stroke style, hr %#lx.\n", hr);
         free(object);
         return hr;
     }

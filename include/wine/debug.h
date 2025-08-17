@@ -59,6 +59,8 @@ struct __wine_debug_channel
     char name[15];
 };
 
+#undef WINE_NO_TRACE_MSGS
+
 #ifndef WINE_NO_TRACE_MSGS
 # define __WINE_GET_DEBUGGING_TRACE(dbch) ((dbch)->flags & (1 << __WINE_DBCL_TRACE))
 #else
@@ -66,8 +68,8 @@ struct __wine_debug_channel
 #endif
 
 #ifndef WINE_NO_DEBUG_MSGS
-# define __WINE_GET_DEBUGGING_WARN(dbch)  ((dbch)->flags & (1 << __WINE_DBCL_WARN))
-# define __WINE_GET_DEBUGGING_FIXME(dbch) ((dbch)->flags & (1 << __WINE_DBCL_FIXME))
+# define __WINE_GET_DEBUGGING_WARN(dbch)  (1 << __WINE_DBCL_WARN)
+# define __WINE_GET_DEBUGGING_FIXME(dbch) (1 << __WINE_DBCL_FIXME)
 #else
 # define __WINE_GET_DEBUGGING_WARN(dbch)  0
 # define __WINE_GET_DEBUGGING_FIXME(dbch) 0

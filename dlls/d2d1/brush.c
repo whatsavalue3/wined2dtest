@@ -31,6 +31,7 @@ static HRESULT STDMETHODCALLTYPE d2d_gradient_QueryInterface(ID2D1GradientStopCo
     TRACE("iface %p, iid %s, out %p.\n", iface, debugstr_guid(iid), out);
 
     if (IsEqualGUID(iid, &IID_ID2D1GradientStopCollection)
+            || IsEqualGUID(iid, &IID_ID2D1GradientStopCollection1)
             || IsEqualGUID(iid, &IID_ID2D1Resource)
             || IsEqualGUID(iid, &IID_IUnknown))
     {
@@ -39,7 +40,7 @@ static HRESULT STDMETHODCALLTYPE d2d_gradient_QueryInterface(ID2D1GradientStopCo
         return S_OK;
     }
 
-    WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(iid));
+    printf("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(iid));
 
     *out = NULL;
     return E_NOINTERFACE;

@@ -199,9 +199,12 @@ HRESULT d2d_wic_render_target_init(struct d2d_wic_render_target *render_target, 
         case DXGI_FORMAT_B8G8R8A8_UNORM:
             render_target->bpp = 4;
             break;
-
+		case DXGI_FORMAT_A8_UNORM:
+            render_target->bpp = 1;
+			break;
+		
         default:
-            FIXME("Unhandled format %#x.\n", texture_desc.Format);
+            printf("Unhandled format %#x.\n", texture_desc.Format);
             return D2DERR_UNSUPPORTED_PIXEL_FORMAT;
     }
 

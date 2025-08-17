@@ -735,6 +735,9 @@ HRESULT d2d_bitmap_create_from_wic_bitmap(struct d2d_device_context *context, IW
         case DXGI_FORMAT_R8G8B8A8_UNORM:
             bpp = 4;
             break;
+		case DXGI_FORMAT_A8_UNORM:
+            bpp = 1;
+            break;
 
         default:
             FIXME("Unhandled format %#x.\n", bitmap_desc.pixelFormat.format);

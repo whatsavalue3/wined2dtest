@@ -890,6 +890,11 @@ void d2d_command_list_push_layer(struct d2d_command_list *command_list, const st
         const D2D1_LAYER_PARAMETERS1 *params, ID2D1Layer *layer);
 void d2d_command_list_pop_layer(struct d2d_command_list *command_list);
 
+HRESULT STDMETHODCALLTYPE d2d_command_list_device_draw(ID2D1CommandList *iface, ID2D1DeviceContext6 *device,
+        const D2D1_POINT_2F *target_offset, const D2D1_RECT_F *image_rect, D2D1_INTERPOLATION_MODE interpolation_mode,
+        D2D1_COMPOSITE_MODE composite_mode);
+
+
 static inline BOOL d2d_array_reserve(void **elements, size_t *capacity, size_t count, size_t size)
 {
     size_t new_capacity, max_capacity;

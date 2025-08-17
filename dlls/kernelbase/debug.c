@@ -795,8 +795,8 @@ HRESULT WINAPI /* DECLSPEC_HOTPATCH */ WerRegisterFile( const WCHAR *file, WER_R
  */
 HRESULT WINAPI /* DECLSPEC_HOTPATCH */ WerRegisterMemoryBlock( void *block, DWORD size )
 {
-    FIXME( "(%p %ld) stub\n", block, size );
-    return E_NOTIMPL;
+    FIXME( "what (%p %ld) stub\n", block, size );
+    return S_OK;
 }
 
 

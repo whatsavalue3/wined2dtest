@@ -1812,3 +1812,9 @@ BOOL WINAPI SetWindowCompositionAttribute(HWND hwnd, void *data)
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
+
+
+WINUSERAPI BOOL        WINAPI SetWindowFeedbackSetting(HWND hwnd ,FEEDBACK_TYPE feedback,DWORD dwFlags,UINT32 size,const void* configuration)
+{
+    return TRUE;
+}
